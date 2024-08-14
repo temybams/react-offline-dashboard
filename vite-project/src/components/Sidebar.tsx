@@ -21,6 +21,17 @@ const Sidebar: React.FC = () => {
   const activeBg = useColorModeValue("#5925dc", "#5925dc");
   const sidebarBg = useColorModeValue("#ffffff", "#ffffff");
 
+  const linkStyles = ({ isActive }: { isActive: boolean }) => ({
+    backgroundColor: isActive ? activeBg : "transparent",
+    color: isActive ? activeLinkColor : linkColor,
+    padding: "15px",
+    borderRadius: "5px",
+    textDecoration: "none",
+    fontWeight: "bold",
+    display: "block",
+    fontSize: "18px",
+  });
+
   const SidebarContent = (
     <VStack
       as="nav"
@@ -38,34 +49,10 @@ const Sidebar: React.FC = () => {
       left="0"
     >
       <VStack align="stretch" spacing="15px">
-        <NavLink
-          to="/dashboard"
-          style={({ isActive }) => ({
-            backgroundColor: isActive ? activeBg : "transparent",
-            color: isActive ? activeLinkColor : linkColor,
-            padding: "15px",
-            borderRadius: "5px",
-            textDecoration: "none",
-            fontWeight: "bold",
-            display: "block",
-            fontSize: "18px",
-          })}
-        >
+        <NavLink to="/dashboard" style={linkStyles}>
           Dashboard
         </NavLink>
-        <NavLink
-          to="/add-contact"
-          style={({ isActive }) => ({
-            backgroundColor: isActive ? activeBg : "transparent",
-            color: isActive ? activeLinkColor : linkColor,
-            padding: "15px",
-            borderRadius: "5px",
-            textDecoration: "none",
-            fontWeight: "bold",
-            display: "block",
-            fontSize: "18px",
-          })}
-        >
+        <NavLink to="/add-contact" style={linkStyles}>
           Add Contact
         </NavLink>
       </VStack>
