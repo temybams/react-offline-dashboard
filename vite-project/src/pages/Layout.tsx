@@ -1,26 +1,15 @@
-import React from 'react';
-import Sidebar from '../components/Sidebar';
-import { Outlet } from 'react-router-dom';
-import { Box, Flex } from '@chakra-ui/react';
+
+import React from "react";
+import Sidebar from "../components/Sidebar";
+import { Outlet } from "react-router-dom";
+import { Box, Flex } from "@chakra-ui/react";
 
 const Layout: React.FC = () => {
   return (
-    <Flex
-      direction={{ base: 'column', md: 'row' }} 
-      minH="100vh"
-      bg="gray.50"
-    >
-      <Box
-        w={{ base: '100%', md: '250px' }} 
-        bg="white"
-        shadow="md"
-      >
-        <Sidebar />
-      </Box>
-      <Box
-        flex="1"
-        p={{ base: '10px', md: '20px' }} 
-      >
+    <Flex minHeight="100vh">
+      <Box width={{ base: "0px", md: "250px" }}></Box>
+      <Sidebar />
+      <Box flex="1" p={{ base: 4, md: 6 }} bg="gray.50">
         <Outlet />
       </Box>
     </Flex>

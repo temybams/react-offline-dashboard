@@ -1,23 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
+  Flex,
+  Spinner,
+  Text,
+  Switch,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
 import styled from "styled-components";
-import { contacts } from "../data/ContactsData";
 import MapView from "../components/MapView";
+import TableView from "../components/TableView";
 
 const DashboardContainer = styled(Box)`
   margin-left: 90px;
+  margin-top: 50px;
   padding: 20px;
   font-family: "Arial", sans-serif;
-  background-color: #f9fafb; /* Layout background color */
+  background-color: #f9fafb;
 
   @media (max-width: 768px) {
     margin-left: 0;
@@ -25,52 +25,85 @@ const DashboardContainer = styled(Box)`
   }
 `;
 
-const StyledTableContainer = styled(TableContainer)`
-  background-color: #ffffff; /* Table background color */
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  margin-bottom: 20px;
-`;
+interface Contact {
+  name: string;
+  phoneNumber: string;
+  email: string;
+  addresses: { value: string }[];
+  longitude: number;
+  latitude: number;
+}
 
-const StyledTr = styled(Tr)`
-  &:nth-child(even) {
-    background-color: #f2f2f2; /* Row background color for even rows */
-  }
-`;
+const DashboardContent: React.FC = () => {
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isMapView, setIsMapView] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const Dashboard: React.FC = () => {
+  useEffect(() => {
+    const fetchContacts = async () => {
+      try {
+        const storedContacts = localStorage.getItem("contacts");
+        if (storedContacts) {
+          setContacts(JSON.parse(storedContacts));
+        }
+      } catch (e) {
+        setError("Failed to load contacts");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContacts();
+  }, []);
+
+  const toggleView = () => {
+    setIsMapView((prev) => !prev);
+  };
+
+  const handleSelectContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setIsMapView(true); 
+  };
+
   return (
     <DashboardContainer>
-      <MapView contacts={contacts} />
-      <StyledTableContainer>
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Name</Th>
-              <Th>Phone Number</Th>
-              <Th>Email</Th>
-              <Th>Address</Th>
-              <Th>Longitude</Th>
-              <Th>Latitude</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {contacts.map((contact) => (
-              <StyledTr key={contact.email}>
-                <Td>{contact.name}</Td>
-                <Td>{contact.phoneNumber}</Td>
-                <Td>{contact.email}</Td>
-                <Td>{contact.addresses[0]}</Td>
-                <Td>{contact.longitude}</Td>
-                <Td>{contact.latitude}</Td>
-              </StyledTr>
-            ))}
-          </Tbody>
-        </Table>
-      </StyledTableContainer>
+      <Flex direction="column">
+        <FormControl display="flex" alignItems="center" mb={4}>
+          <FormLabel htmlFor="view-toggle" mb="0">
+            {isMapView ? "Map View" : "Table View"}
+          </FormLabel>
+          <Switch
+            id="view-toggle"
+            isChecked={isMapView}
+            onChange={toggleView}
+          />
+        </FormControl>
+
+        {loading && <Spinner size="xl" color="teal.500" />}
+        {error && <Text color="red.500">{error}</Text>}
+
+        {!loading && !error && (
+          <>
+            {isMapView ? (
+              <MapView
+                contacts={contacts}
+                selectedContact={selectedContact}
+                onSelectContact={handleSelectContact}
+              />
+            ) : (
+              <TableView
+                contacts={contacts}
+                onSelectContact={handleSelectContact}
+              />
+            )}
+          </>
+        )}
+      </Flex>
     </DashboardContainer>
   );
 };
 
-export default Dashboard;
+export default DashboardContent;
+

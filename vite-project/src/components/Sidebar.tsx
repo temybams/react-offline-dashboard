@@ -28,12 +28,14 @@ const Sidebar: React.FC = () => {
       align="stretch"
       padding="20px"
       bg={sidebarBg}
-      height={{ base: "auto", md: "100vh" }}
-      width={{ base: "100%", md: "250px" }}
+      height="100vh"
+      width={{ base: "70%", sm: "250px" }}
       position="fixed"
       boxShadow={{ base: "none", md: "2px 0 5px rgba(0, 0, 0, 0.2)" }}
       display="flex"
       flexDirection="column"
+      top="0"
+      left="0"
     >
       <VStack align="stretch" spacing="15px">
         <NavLink
@@ -82,6 +84,7 @@ const Sidebar: React.FC = () => {
         position="fixed"
         top="15px"
         left="15px"
+        zIndex="modal"
       />
 
       <Drawer placement="left" onClose={onClose} isOpen={isOpen}>
