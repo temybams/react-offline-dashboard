@@ -17,11 +17,22 @@ const DashboardContainer = styled(Box)`
   margin-top: 50px;
   padding: 20px;
   font-family: "Arial", sans-serif;
-  background-color: #f9fafb;
+  background-color: #ffff;
+
+  @media (max-width: 1024px) {
+    margin-left: 70px; 
+    padding: 15px;
+  }
 
   @media (max-width: 768px) {
     margin-left: 0;
     padding: 10px;
+  }
+
+  @media (max-width: 480px) {
+    margin-left: 0;
+    padding: 5px;
+    margin-top: 70px;
   }
 `;
 

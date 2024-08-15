@@ -26,8 +26,8 @@ const contactFormSchema = yup.object().shape({
     )
     .min(1, "At least one address is required")
     .max(5, "No more than 5 addresses allowed"),
-  longitude: yup.number().required("Longitude is required"),
-  latitude: yup.number().required("Latitude is required"),
+  longitude: yup.number(),
+  latitude: yup.number()
 });
 
 export default contactFormSchema;

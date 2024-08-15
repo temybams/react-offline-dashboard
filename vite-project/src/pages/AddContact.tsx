@@ -3,9 +3,9 @@ import { Box, VStack, Button, HStack, IconButton } from "@chakra-ui/react";
 import { AddIcon, MinusIcon } from "@chakra-ui/icons";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useContactForm } from "../hooks/useContactForm";
-import InputField from "../components/InputField";
 import contactFormSchema from "../validationSchemas/contactFormSchema";
+import InputField from "../components/InputField";
+import { useContactForm } from "../hooks/useContactForm";
 
 const AddContactForm: React.FC = () => {
   const {
@@ -54,7 +54,6 @@ const AddContactForm: React.FC = () => {
             placeholder="Enter email"
           />
 
-
           <InputField
             name={`addresses[0].value`}
             label="Address 1"
@@ -74,7 +73,7 @@ const AddContactForm: React.FC = () => {
                 aria-label="Remove address"
                 icon={<MinusIcon />}
                 onClick={() => remove(index + 1)}
-                isDisabled={fields.length <= 2} 
+                isDisabled={fields.length <= 2}
               />
             </HStack>
           ))}

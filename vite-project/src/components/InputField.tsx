@@ -13,8 +13,6 @@ interface InputFieldProps {
   placeholder: string;
   control: Control<any>;
   isDisabled?: boolean;
-  isArrayField?: boolean;
-  index?: number;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -23,17 +21,11 @@ const InputField: React.FC<InputFieldProps> = ({
   placeholder,
   control,
   isDisabled = false,
-  isArrayField = false,
-  index,
 }) => {
   return (
     <Controller
       control={control}
-      name={
-        isArrayField && typeof index === "number"
-          ? `${name}[${index}].value`
-          : name
-      }
+      name={name}
       render={({ field, fieldState: { error } }) => (
         <FormControl isInvalid={!!error}>
           <FormLabel htmlFor={name}>{label}</FormLabel>
@@ -42,6 +34,7 @@ const InputField: React.FC<InputFieldProps> = ({
             id={name}
             placeholder={placeholder}
             isDisabled={isDisabled}
+  
           />
           <FormErrorMessage>{error?.message}</FormErrorMessage>
         </FormControl>

@@ -1,6 +1,4 @@
-
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   Thead,
@@ -10,10 +8,16 @@ import {
   Td,
   TableContainer,
   Button,
-  HStack,
   Box,
+  Flex,
+  Text,
+  IconButton,
 } from "@chakra-ui/react";
+import { ArrowLeftIcon, ArrowRightIcon } from "@chakra-ui/icons";
 import styled from "styled-components";
+import AddressModal from "./AddressModal";
+import EditModal from "./EditModal";
+import { handleDeleteAddress } from "../logic/ContactUtils";
 
 const StyledTableContainer = styled(TableContainer)`
   background-color: #ffffff;
@@ -21,27 +25,27 @@ const StyledTableContainer = styled(TableContainer)`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
   margin-bottom: 10px;
-  overflow-x: auto;
+  overflow-x: auto; /* Enables horizontal scrolling on small screens */
+
+  @media (max-width: 768px) {
+    padding: 10px;
+  }
 `;
 
 const StyledTable = styled(Table)`
   table-layout: auto;
   width: 100%;
 `;
-
 const StyledTh = styled(Th)`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: bold;
   padding: 16px 12px;
+
   @media (max-width: 768px) {
+    padding: 8px 6px;
     font-size: 14px;
-    padding: 12px 8px;
-  }
-  @media (max-width: 480px) {
-    font-size: 12px;
-    padding: 10px 6px;
   }
 `;
 
@@ -52,19 +56,44 @@ const StyledTd = styled(Td)`
   max-width: 150px;
   padding: 16px 12px;
   font-weight: 500;
+
   @media (max-width: 768px) {
+    padding: 8px 6px;
     font-size: 14px;
-    padding: 12px 8px;
   }
-  @media (max-width: 480px) {
-    font-size: 12px;
-    padding: 10px 6px;
+`;
+
+const AddressTd = styled(StyledTd)`
+  cursor: pointer;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: blue;
   }
 `;
 
 const StyledTr = styled(Tr)`
   &:nth-child(even) {
     background-color: #f2f2f2;
+  }
+
+  @media (max-width: 768px) {
+    &:nth-child(even) {
+      background-color: #e0e0e0;
+    }
+  }
+`;
+
+const ActionTd = styled(Td)`
+  white-space: nowrap;
+  overflow: visible;
+  max-width: none;
+  padding: 16px 12px;
+  font-weight: 500;
+
+  @media (max-width: 768px) {
+    padding: 8px 6px;
+    font-size: 14px;
   }
 `;
 
@@ -83,99 +112,95 @@ interface TableViewProps {
 }
 
 const TableView: React.FC<TableViewProps> = ({ contacts, onSelectContact }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedAddresses, setSelectedAddresses] = useState<string[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [contactList, setContactList] = useState<Contact[]>(contacts);
   const [currentPage, setCurrentPage] = useState(1);
   const contactsPerPage = 5;
 
-  const getRandomAddress = (addresses: { value: string }[]) => {
-    if (addresses.length === 0) return "No address";
-    return addresses[Math.floor(Math.random() * addresses.length)].value;
+  useEffect(() => {
+    const storedContacts = localStorage.getItem("contacts");
+    if (storedContacts) {
+      setContactList(JSON.parse(storedContacts));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("contacts", JSON.stringify(contactList));
+  }, [contactList]);
+
+  const handleAddressClick = (addresses: { value: string }[]) => {
+    const addressValues = addresses.map((address) => address.value);
+    setSelectedAddresses(addressValues);
+    setIsModalOpen(true);
+  };
+
+  // const handleEditClick = (contact: Contact) => {
+  //   setSelectedContact(contact);
+  //   const addresses = contact.addresses.map((address) => address.value);
+
+  //   if (addresses.length > 1) {
+  //     setSelectedAddresses(addresses);
+  //     setIsModalOpen(true);
+  //   } else {
+  //     setSelectedAddress(addresses[0] || "");
+  //     setIsUpdateModalOpen(true);
+  //   }
+  // };
+
+  const handleDelete = (address: string) => {
+    handleDeleteAddress(contactList, address, setContactList, setIsModalOpen);
+  };
+
+  const handleSelectAddress = (address: string) => {
+    setSelectedAddress(address);
+    setIsModalOpen(false);
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleUpdateAddress = (updatedAddress: string) => {
+    if (selectedContact) {
+      const updatedContacts = contactList.map((contact) => {
+        if (contact === selectedContact) {
+          const updatedAddresses = contact.addresses.map((address) =>
+            address.value === selectedAddress
+              ? { value: updatedAddress }
+              : address
+          );
+          return { ...contact, addresses: updatedAddresses };
+        }
+        return contact;
+      });
+
+      setContactList(updatedContacts);
+      localStorage.setItem("contacts", JSON.stringify(updatedContacts));
+      setSelectedContact(null);
+      setSelectedAddress(null);
+    }
   };
 
   const indexOfLastContact = currentPage * contactsPerPage;
   const indexOfFirstContact = indexOfLastContact - contactsPerPage;
-  const currentContacts = contacts.slice(
+  const currentContacts = contactList.slice(
     indexOfFirstContact,
     indexOfLastContact
   );
-  const totalPages = Math.ceil(contacts.length / contactsPerPage);
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const totalPages = Math.ceil(contactList.length / contactsPerPage);
 
-  const paginationButtons = () => {
-    let buttons = [];
-    const maxPagesToShow = 5;
-    const startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-    const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
-    if (totalPages > maxPagesToShow) {
-      if (startPage > 1) {
-        buttons.push(
-          <Button
-            key={1}
-            onClick={() => paginate(1)}
-            colorScheme="gray"
-            size="sm"
-          >
-            1
-          </Button>
-        );
-        if (startPage > 2) {
-          buttons.push(
-            <Button key="ellipsis-start" disabled colorScheme="gray" size="sm">
-              ...
-            </Button>
-          );
-        }
-      }
-
-      for (let page = startPage; page <= endPage; page++) {
-        buttons.push(
-          <Button
-            key={page}
-            onClick={() => paginate(page)}
-            colorScheme={currentPage === page ? "purple" : "gray"}
-            size="sm"
-          >
-            {page}
-          </Button>
-        );
-      }
-
-      if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-          buttons.push(
-            <Button key="ellipsis-end" disabled colorScheme="gray" size="sm">
-              ...
-            </Button>
-          );
-        }
-        buttons.push(
-          <Button
-            key={totalPages}
-            onClick={() => paginate(totalPages)}
-            colorScheme="gray"
-            size="sm"
-          >
-            {totalPages}
-          </Button>
-        );
-      }
-    } else {
-      for (let page = 1; page <= totalPages; page++) {
-        buttons.push(
-          <Button
-            key={page}
-            onClick={() => paginate(page)}
-            colorScheme={currentPage === page ? "purple" : "gray"}
-            size="sm"
-          >
-            {page}
-          </Button>
-        );
-      }
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
     }
+  };
 
-    return buttons;
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
   };
 
   return (
@@ -200,10 +225,16 @@ const TableView: React.FC<TableViewProps> = ({ contacts, onSelectContact }) => {
                   <StyledTd>{contact.name}</StyledTd>
                   <StyledTd>{contact.phoneNumber}</StyledTd>
                   <StyledTd>{contact.email}</StyledTd>
-                  <StyledTd>{getRandomAddress(contact.addresses)}</StyledTd>
+                  <AddressTd
+                    onClick={() => handleAddressClick(contact.addresses)}
+                  >
+                    {contact.addresses[0]?.value || "No address"}
+                  </AddressTd>
                   <StyledTd>{contact.longitude}</StyledTd>
                   <StyledTd>{contact.latitude}</StyledTd>
-                  <StyledTd>
+                  <ActionTd>
+                    {" "}
+                    {/* Use ActionTd here */}
                     <Button
                       onClick={() => onSelectContact(contact)}
                       colorScheme="purple"
@@ -211,7 +242,7 @@ const TableView: React.FC<TableViewProps> = ({ contacts, onSelectContact }) => {
                     >
                       View on Map
                     </Button>
-                  </StyledTd>
+                  </ActionTd>
                 </StyledTr>
               ))
             ) : (
@@ -223,27 +254,43 @@ const TableView: React.FC<TableViewProps> = ({ contacts, onSelectContact }) => {
         </StyledTable>
       </StyledTableContainer>
 
-      <HStack justifyContent="center" mb={6} mt={10} spacing={2}>
-        <Button
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-          colorScheme="blue"
-          size="sm"
-        >
-          Previous
-        </Button>
-        {paginationButtons()}
-        <Button
-          onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          colorScheme="purple"
-          size="sm"
-        >
-          Next
-        </Button>
-      </HStack>
+      <Flex justifyContent="space-between" alignItems="center" mt={4}>
+        <IconButton
+          icon={<ArrowLeftIcon />}
+          aria-label="Previous Page"
+          onClick={prevPage}
+          isDisabled={currentPage === 1}
+        />
+        <Text>
+          Page {currentPage} of {totalPages}
+        </Text>
+        <IconButton
+          icon={<ArrowRightIcon />}
+          aria-label="Next Page"
+          onClick={nextPage}
+          isDisabled={currentPage === totalPages}
+        />
+      </Flex>
+
+      <AddressModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        addresses={selectedAddresses}
+        onEdit={handleSelectAddress}
+        onDelete={handleDelete}
+      />
+
+      {selectedAddress && (
+        <EditModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          address={selectedAddress}
+          onSubmit={handleUpdateAddress}
+        />
+      )}
     </Box>
   );
 };
 
 export default TableView;
+
